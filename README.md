@@ -1,2 +1,2 @@
-# simple-rsync-backp
-Script to backup files to two different locations using rsync.
+# simple-rsync-backup
+Script to back up files to two different locations using rsync.

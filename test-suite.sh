@@ -10,7 +10,7 @@ BUILD_SUCCESSFUL=true
 function before() {
   echo -e "\nRunning tests"
   mkdir -p $HD
-  mkdir -p $BKD
+  mkdir -p $BKD/happyuser
   touch --date="1997-11-29 13:55" $HD/file1
   touch $HD/file2
   touch --date="1998-11-29 13:56" $BKD/happyuser/file2
@@ -20,6 +20,16 @@ function before() {
 function test_srbackup() {
   ./srbackup.sh $HD $BKD
   assert_result
+}
+
+function test_help() {
+  OUTPUT=$(./srbackup.sh --help)
+  assert_help_result "$OUTPUT" "help"
+}
+
+function test_h() {
+  OUTPUT=$(./srbackup.sh -h)
+  assert_help_result "$OUTPUT" "h"
 }
 
 function after() {
@@ -68,14 +78,33 @@ function assert_override_modified_file() {
   fi
 }
 
+function assert_non_existent_files_in_the_source() {
+  ASSERTION_NAME="Test non-existent files in the source."
+  if test -e $BKD/happyuser/file3 && grep -Pzq "Missing files:\nsending incremental file list\nhappyuser/file3" "$BKD/srbackup-missing.log" ; then
+    successful_assertion "$ASSERTION_NAME"
+  else
+    failure_assertion "$ASSERTION_NAME"
+  fi
+}
+
 function assert_result() {
-    assert_access_time
-    assert_modify_time
-    assert_override_modified_file
-    # TODO assert existing files in backup but missing in the source.
+  assert_access_time
+  assert_modify_time
+  assert_override_modified_file
+  assert_non_existent_files_in_the_source
+}
+
+function assert_help_result() {
+  ASSERTION_NAME="Test $2."
+  if [ "$1" = "Usage: srbackup.sh <source dir> <target dir>" ]; then
+    successful_assertion "$ASSERTION_NAME"
+  else
+    failure_assertion "$ASSERTION_NAME"
+  fi
 }
 
 before
 test_srbackup
+test_help
+test_h
 after
-
